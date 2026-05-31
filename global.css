@@ -1,0 +1,148 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+/* =============================================================
+   DESIGN TOKENS — Lingua design system
+   Single source of truth for Tailwind/NativeWind utilities.
+   Mirrors the typed tokens in `theme/`. Keep both in sync.
+   ============================================================= */
+@theme {
+  /* ---- Brand / Primary ----------------------------------------------
+     Tip: VS Code renders a live colour swatch beside each hex value
+     below (the small clickable square). The duplicate hex in each
+     trailing comment is just a plain-text fallback for editors/diffs
+     that don't show colour decorators. */
+  --color-lingua-purple: #6c4ef5; /* 🟪 Lingua Purple        #6C4EF5 */
+  --color-lingua-deep-purple: #5b3bf6; /* 🟪 Lingua Deep Purple   #5B3BF6 */
+  --color-lingua-blue: #4d8bff; /* 🟦 Lingua Blue          #4D8BFF */
+  --color-lingua-green: #21c16b; /* 🟩 Lingua Green         #21C16B */
+
+  /* ---- Semantic ----------------------------------------------------- */
+  --color-success: #21c16b; /* 🟩 Success              #21C16B */
+  --color-warning: #ffc800; /* 🟨 Warning              #FFC800 */
+  --color-streak: #ff8a00; /* 🟧 Streak               #FF8A00 */
+  --color-error: #ff4d4f; /* 🟥 Error                #FF4D4F */
+  --color-info: #4d8bff; /* 🟦 Info                 #4D8BFF */
+
+  /* ---- Neutrals ----------------------------------------------------- */
+  --color-text-primary: #0d132b; /* ⬛ Text / Primary       #0D132B */
+  --color-text-secondary: #6b7280; /* ⬛ Text / Secondary     #6B7280 */
+  --color-border: #e5e7eb; /* ⬜ Border               #E5E7EB */
+  --color-surface: #f6f7fb; /* ⬜ Surface              #F6F7FB */
+  --color-background: #ffffff; /* ⬜ Background            #FFFFFF */
+
+  /* ---- Font families (map to expo-font keys) ------------ */
+  --font-poppins: "Poppins-Regular";
+  --font-poppins-medium: "Poppins-Medium";
+  --font-poppins-semibold: "Poppins-SemiBold";
+  --font-poppins-bold: "Poppins-Bold";
+}
+
+/* =============================================================
+   TYPOGRAPHY UTILITIES
+   Each utility bundles font-family + size + line-height so the
+   type scale stays consistent across screens.
+   line-height = round(size * ratio) from the design spec.
+   ============================================================= */
+@utility text-h1 {
+  font-family: "Poppins-Bold";
+  font-size: 32px;
+  line-height: 38px; /* 32 * 1.2 */
+}
+
+@utility text-h2 {
+  font-family: "Poppins-SemiBold";
+  font-size: 24px;
+  line-height: 31px; /* 24 * 1.3 */
+}
+
+@utility text-h3 {
+  font-family: "Poppins-SemiBold";
+  font-size: 20px;
+  line-height: 26px; /* 20 * 1.3 */
+}
+
+@utility text-h4 {
+  font-family: "Poppins-Medium";
+  font-size: 16px;
+  line-height: 22px; /* 16 * 1.4 */
+}
+
+@utility text-body-lg {
+  font-family: "Poppins-Regular";
+  font-size: 16px;
+  line-height: 26px; /* 16 * 1.6 */
+}
+
+@utility text-body-md {
+  font-family: "Poppins-Regular";
+  font-size: 14px;
+  line-height: 22px; /* 14 * 1.6 */
+}
+
+@utility text-body-sm {
+  font-family: "Poppins-Regular";
+  font-size: 13px;
+  line-height: 21px; /* 13 * 1.6 */
+}
+
+@utility text-caption {
+  font-family: "Poppins-Regular";
+  font-size: 11px;
+  line-height: 15px; /* 11 * 1.4 */
+}
+
+/* =============================================================
+   REUSABLE COMPONENT UTILITIES (BEM)
+   Foundation patterns implied by the design system: rounded
+   cards, soft shadows, pill badges. Extend with new BEM blocks
+   rather than repeating class strings across screens.
+   ============================================================= */
+
+/* Block: screen — base page surface */
+@utility screen {
+  flex: 1;
+  background-color: var(--color-background);
+}
+
+/* Block: card — rounded surface with soft shadow */
+@utility card {
+  background-color: var(--color-background);
+  border-radius: 16px;
+  border-width: 1px;
+  border-color: var(--color-border);
+  padding: 16px;
+  box-shadow: 0px 4px 12px rgba(13, 19, 43, 0.06);
+}
+
+/* Modifier: card--flat — no border/shadow, surface fill */
+@utility card--flat {
+  background-color: var(--color-surface);
+  border-radius: 16px;
+  border-width: 0px;
+  padding: 16px;
+}
+
+/* Block: badge — pill label */
+@utility badge {
+  flex-direction: row;
+  align-items: center;
+  align-self: flex-start;
+  border-radius: 9999px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 12px;
+  padding-right: 12px;
+  background-color: var(--color-surface);
+}
+
+/* Element: badge__text */
+@utility badge__text {
+  font-family: "Poppins-Medium";
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--color-text-primary);
+}
