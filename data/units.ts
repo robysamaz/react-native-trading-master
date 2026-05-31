@@ -45,6 +45,13 @@ export const units: Unit[] = [
     subtitle: "Bias on the higher timeframe, entries on the lower timeframe.",
     order: 1,
   },
+  {
+    id: "rpa-structure-liquidity",
+    trackId: "reading-price-action",
+    title: "Structure & Liquidity",
+    subtitle: "Read market structure and where liquidity rests to time entries.",
+    order: 2,
+  },
 ];
 
 /** Units belonging to a track, in display order. */

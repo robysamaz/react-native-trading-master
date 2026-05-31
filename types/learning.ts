@@ -23,8 +23,11 @@ export type IconName = ComponentProps<typeof Ionicons>["name"];
 /**
  * Per-lesson progress status. Stored content ships with a sensible initial
  * status; the Zustand store owns the live progression at runtime.
+ *
+ * `in-progress` marks the lesson the learner is currently on (the Lessons
+ * screen highlights it). No status locks a lesson out — gating is visual only.
  */
-export type LessonStatus = "locked" | "available" | "completed";
+export type LessonStatus = "locked" | "available" | "in-progress" | "completed";
 
 /** A jargon term paired with a plain-English definition. */
 export interface KeyTerm {

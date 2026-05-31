@@ -87,6 +87,15 @@ function HomeScreen({ track }: { track: Track }) {
     return { unit, completed, total: lessons.length };
   });
 
+  // Open a unit from "Your path": jump to the Learn tab and focus that unit.
+  // Every lesson there is openable (locked is a visual state only), so users can
+  // browse all topics regardless of progress. `navigate` switches to the
+  // existing tab and updates its `unit` param rather than stacking a new screen.
+  const openUnit = (unit: Unit) => {
+    posthog.capture("unit_opened", { unit_id: unit.id, track_id: track.id });
+    router.navigate({ pathname: "/learn", params: { unit: unit.id } });
+  };
+
   // Total XP on offer across the track — a friendly "what this track is worth".
   const totalXp = orderedLessons.reduce((sum, lesson) => sum + lesson.xp, 0);
 
@@ -160,6 +169,7 @@ function HomeScreen({ track }: { track: Track }) {
                 total={total}
                 accent={track.accent}
                 isLast={index === unitProgress.length - 1}
+                onPress={() => openUnit(unit)}
               />
             ))}
           </View>
@@ -250,24 +260,32 @@ function ContinueLearningCard({
   );
 }
 
-/** One unit row in the "Your path" list with a tinted progress indicator. */
+/**
+ * One unit row in the "Your path" list with a tinted progress indicator.
+ * Tappable — opens the unit in the Learn tab (all topics browsable, including
+ * lessons that are still locked).
+ */
 function UnitRow({
   unit,
   completed,
   total,
   accent,
   isLast,
+  onPress,
 }: {
   unit: Unit;
   completed: number;
   total: number;
   accent: string;
   isLast: boolean;
+  onPress: () => void;
 }) {
   const fraction = total > 0 ? completed / total : 0;
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
       className={`flex-row items-center p-4 ${isLast ? "" : "border-b border-border"}`}
     >
       {/* Unit number tile */}
@@ -290,10 +308,19 @@ function UnitRow({
         </View>
       </View>
 
-      <Text className="text-body-sm ml-3 font-poppins-semibold text-text-secondary">
-        {completed}/{total}
-      </Text>
-    </View>
+      {/* Count + chevron affordance */}
+      <View className="ml-3 flex-row items-center">
+        <Text className="text-body-sm font-poppins-semibold text-text-secondary">
+          {completed}/{total}
+        </Text>
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={colors.textSecondary}
+          style={{ marginLeft: 4 }}
+        />
+      </View>
+    </TouchableOpacity>
   );
 }
 

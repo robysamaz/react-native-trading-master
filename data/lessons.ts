@@ -69,7 +69,7 @@ export const lessons: Lesson[] = [
       },
     ],
     xp: 10,
-    status: "available",
+    status: "completed",
     aiMentorPrompt: mentorPrompt(
       "what a supply & demand zone is — base + departure, proximal/distal lines, and why price revisits zones to fill institutional orders."
     ),
@@ -106,7 +106,7 @@ export const lessons: Lesson[] = [
       },
     ],
     xp: 15,
-    status: "locked",
+    status: "in-progress",
     aiMentorPrompt: mentorPrompt(
       "the two demand-zone patterns RBR (Rally-Base-Rally) and DBR (Drop-Base-Rally), and that demand zones are where you only look for longs."
     ),
@@ -143,9 +143,51 @@ export const lessons: Lesson[] = [
       },
     ],
     xp: 15,
-    status: "locked",
+    status: "available",
     aiMentorPrompt: mentorPrompt(
       "the two supply-zone patterns DBD (Drop-Base-Drop) and RBD (Rally-Base-Drop), and that supply zones are where you only look for shorts."
+    ),
+  },
+
+  {
+    id: "lsn-drawing-zones",
+    trackId: "supply-demand-foundations",
+    unitId: "sdf-zone-basics",
+    order: 4,
+    title: "Drawing a Zone: Base to Proximal & Distal",
+    goal: "Draw a zone as a rectangle from its base — proximal line at the entry edge, distal line at the protective far edge.",
+    keyTerms: [
+      {
+        term: "Base boundary",
+        definition: "The cluster of small consolidation candles before the departure — its high and low frame the zone rectangle.",
+      },
+      {
+        term: "Proximal line",
+        definition: "The base edge nearest current price; the side price touches first and where you look to enter.",
+      },
+      {
+        term: "Distal line",
+        definition: "The far base edge; the stop sits just beyond it because a clean break there invalidates the zone.",
+      },
+      {
+        term: "Wicks vs bodies",
+        definition: "Draw demand from the lows and supply from the highs (wicks included) so the zone captures the full order cluster.",
+      },
+    ],
+    examples: [
+      {
+        title: "Drawing a demand zone",
+        scenario: "On MNQ, mark the base low (distal) and base high (proximal). Longs are sought near the proximal line; the stop rests below the distal line.",
+      },
+      {
+        title: "Keep it a rectangle",
+        scenario: "A zone is an area, not a line. Extend the rectangle to the right so you can see exactly where price re-enters it later.",
+      },
+    ],
+    xp: 15,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "how to draw a zone from its base as a rectangle — locating the proximal (entry) and distal (stop) lines and using wicks for demand lows and supply highs."
     ),
   },
 
@@ -192,6 +234,44 @@ export const lessons: Lesson[] = [
     status: "locked",
     aiMentorPrompt: mentorPrompt(
       "grading zone quality with the four checks — freshness, departure strength, structure break, and HTF alignment — and trading only A+ and B zones while avoiding C zones."
+    ),
+  },
+
+  {
+    id: "lsn-fresh-vs-tested",
+    trackId: "supply-demand-foundations",
+    unitId: "sdf-grading",
+    order: 2,
+    title: "Fresh vs Tested Zones",
+    goal: "Prefer fresh, untouched zones — each retest consumes resting orders and weakens the zone.",
+    keyTerms: [
+      {
+        term: "Fresh zone",
+        definition: "A zone price has not returned to since it formed; the unfilled institutional orders are still resting there.",
+      },
+      {
+        term: "Tested zone",
+        definition: "A zone price has already revisited; some orders are now filled, so the next reaction is less reliable.",
+      },
+      {
+        term: "Zone depletion",
+        definition: "Each touch consumes liquidity. After one or two tests a zone is usually spent — treat it as lower quality.",
+      },
+    ],
+    examples: [
+      {
+        title: "First touch holds best",
+        scenario: "MES rallies from a fresh demand zone on its first return — the cleanest reaction, because the resting orders are still intact.",
+      },
+      {
+        title: "A depleted zone fails",
+        scenario: "A demand zone already tested twice breaks on the third visit. Drained of orders, it no longer offers an edge — skip it.",
+      },
+    ],
+    xp: 20,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "freshness as a grading factor — why an untouched zone reacts most reliably and how each retest depletes resting orders and downgrades quality."
     ),
   },
 
@@ -349,6 +429,81 @@ export const lessons: Lesson[] = [
     ),
   },
 
+  {
+    id: "lsn-stop-placement",
+    trackId: "risk-position-sizing",
+    unitId: "rps-sizing",
+    order: 2,
+    title: "Stop Placement Beyond the Distal Line",
+    goal: "Place the protective stop just past the zone's distal line so normal noise does not stop you out, but a real invalidation does.",
+    keyTerms: [
+      {
+        term: "Distal stop",
+        definition: "The stop sits a small buffer beyond the distal line — close through it and the zone idea is wrong, so you are out.",
+      },
+      {
+        term: "Buffer",
+        definition: "A few ticks past the distal line to absorb spread and wick noise without widening risk unnecessarily.",
+      },
+      {
+        term: "Invalidation",
+        definition: "A clean break of the distal line means institutions did not defend the zone — exit, do not hope.",
+      },
+    ],
+    examples: [
+      {
+        title: "Stop below demand",
+        scenario: "On a long from an MGC demand zone, the stop goes a few ticks under the distal (base low). A wick into the zone is fine; a close below it is not.",
+      },
+      {
+        title: "Why not tighter",
+        scenario: "A stop inside the zone invites a stop-out on normal noise. The distal line is the structural level that actually invalidates the trade.",
+      },
+    ],
+    xp: 20,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "placing the protective stop just beyond the zone's distal line with a small buffer — distinguishing normal wick noise from a true invalidation."
+    ),
+  },
+  {
+    id: "lsn-target-placement",
+    trackId: "risk-position-sizing",
+    unitId: "rps-sizing",
+    order: 3,
+    title: "Setting Targets to Clear 3:1",
+    goal: "Aim at the next opposing zone or resting liquidity, and only take the trade if that distance is at least 3:1 versus the stop.",
+    keyTerms: [
+      {
+        term: "Opposing zone",
+        definition: "The next supply zone above a long (or demand below a short) is a logical target where price may stall.",
+      },
+      {
+        term: "Liquidity target",
+        definition: "Prior highs/lows where stops rest often act as magnets, making sensible and reachable targets.",
+      },
+      {
+        term: "R:R gate",
+        definition: "Target distance ÷ stop distance. Below 3:1, the trade fails the floor — pass and wait for a better location.",
+      },
+    ],
+    examples: [
+      {
+        title: "Target the next supply",
+        scenario: "Long from MES demand with an 8-point stop. The next H4 supply sits ~28 points away → ~3.5:1, clearing the 3:1 floor.",
+      },
+      {
+        title: "Too close to trade",
+        scenario: "If the nearest opposing zone is only 2:1 away, the location is poor. Skip it rather than move the stop or invent a farther target.",
+      },
+    ],
+    xp: 20,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "placing targets at the next opposing zone or resting liquidity and enforcing the minimum 3:1 reward-to-risk floor before taking the trade."
+    ),
+  },
+
   // ============================================================
   // Track: Reading Price Action
   // Unit: Multi-Timeframe Workflow
@@ -425,6 +580,159 @@ export const lessons: Lesson[] = [
     status: "locked",
     aiMentorPrompt: mentorPrompt(
       "refining entries on the M5–M15 timeframe inside an HTF zone — confirmation entries (zone removal, BOS, momentum break, rejection) and how a refined zone tightens the stop and improves R:R."
+    ),
+  },
+
+  // ============================================================
+  // Track: Reading Price Action
+  // Unit: Structure & Liquidity
+  // ============================================================
+  {
+    id: "lsn-market-structure",
+    trackId: "reading-price-action",
+    unitId: "rpa-structure-liquidity",
+    order: 1,
+    title: "Market Structure: BOS & CHoCH",
+    goal: "Read trend through swing highs and lows — a Break of Structure continues it, a Change of Character warns it may be turning.",
+    keyTerms: [
+      {
+        term: "Swing high / low",
+        definition: "The pivots that define structure; higher highs and higher lows are an uptrend, lower highs and lower lows a downtrend.",
+      },
+      {
+        term: "BOS (Break of Structure)",
+        definition: "Price breaks the most recent swing in the trend direction, confirming continuation.",
+      },
+      {
+        term: "CHoCH (Change of Character)",
+        definition: "Price breaks a swing against the prevailing trend — the first hint that structure may be shifting.",
+      },
+    ],
+    examples: [
+      {
+        title: "Bullish BOS",
+        scenario: "MNQ in an uptrend breaks above its last swing high — a BOS confirming the trend, so fresh demand below stays in play for longs.",
+      },
+      {
+        title: "Bearish CHoCH",
+        scenario: "After higher highs, MES breaks a recent swing low. That CHoCH warns the up-leg may be ending — raise the bar before new longs.",
+      },
+    ],
+    xp: 25,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "reading market structure with swing highs and lows — distinguishing a Break of Structure (continuation) from a Change of Character (possible reversal)."
+    ),
+  },
+  {
+    id: "lsn-liquidity",
+    trackId: "reading-price-action",
+    unitId: "rpa-structure-liquidity",
+    order: 2,
+    title: "Liquidity & Stop Hunts",
+    goal: "Spot where stops rest — above highs and below lows — and understand why price often sweeps that liquidity before moving to a zone.",
+    keyTerms: [
+      {
+        term: "Liquidity pool",
+        definition: "Clusters of stop orders resting just beyond obvious swing highs/lows and round numbers.",
+      },
+      {
+        term: "Liquidity sweep",
+        definition: "A quick spike through a high/low that triggers stops, giving institutions fills before the real move.",
+      },
+      {
+        term: "Inducement",
+        definition: "An obvious-looking level that lures entries whose stops then become the liquidity the real move runs to.",
+      },
+    ],
+    examples: [
+      {
+        title: "Sweep then reverse",
+        scenario: "MES wicks just below a prior low, triggering sell stops, then rallies from demand. The sweep filled buyers before the move up.",
+      },
+      {
+        title: "Waiting for the sweep",
+        scenario: "Rather than buy into a clean low, wait for the sweep into demand plus a structure shift — entries after the grab are higher quality.",
+      },
+    ],
+    xp: 25,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "identifying resting liquidity above highs and below lows, why price sweeps stops before reversing, and how inducement traps early entries."
+    ),
+  },
+  {
+    id: "lsn-imbalance-fvg",
+    trackId: "reading-price-action",
+    unitId: "rpa-structure-liquidity",
+    order: 3,
+    title: "Imbalance & Fair-Value Gaps",
+    goal: "Recognize the fast, one-sided moves that leave imbalance (a fair-value gap) and know price often returns to rebalance it.",
+    keyTerms: [
+      {
+        term: "Imbalance",
+        definition: "A fast move where one side dominated and little trading occurred — visible as a gap between candle wicks.",
+      },
+      {
+        term: "Fair-value gap (FVG)",
+        definition: "The three-candle gap that marks the imbalance; price frequently revisits it to fill unmatched orders.",
+      },
+      {
+        term: "Departure imbalance",
+        definition: "The strong, imbalanced move out of a base is what makes a zone high quality — it confirms real institutional intent.",
+      },
+    ],
+    examples: [
+      {
+        title: "Filling the gap",
+        scenario: "MNQ rips up leaving an FVG. Price later dips back into that gap, rebalances, and continues — the FVG acted as support.",
+      },
+      {
+        title: "Imbalance grades the zone",
+        scenario: "A demand zone whose departure left a clear imbalance scores higher than one that crept away slowly — the gap is the footprint.",
+      },
+    ],
+    xp: 25,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "spotting imbalance and fair-value gaps from fast one-sided moves, why price returns to rebalance them, and how departure imbalance grades a zone's quality."
+    ),
+  },
+  {
+    id: "lsn-top-down-workflow",
+    trackId: "reading-price-action",
+    unitId: "rpa-structure-liquidity",
+    order: 4,
+    title: "The Top-Down Workflow (D1 → H4 → M15)",
+    goal: "Build a trade idea top-down: bias and major zones on D1/H4, then drop to M15 to refine and confirm the entry.",
+    keyTerms: [
+      {
+        term: "Top-down analysis",
+        definition: "Start high (D1/H4) for bias and key zones, then descend to the entry timeframe — never the reverse.",
+      },
+      {
+        term: "HTF zone of interest",
+        definition: "The major D1/H4 supply or demand zone aligned with bias where you wait for price to arrive.",
+      },
+      {
+        term: "Entry confirmation",
+        definition: "On M15, wait for a structure shift, liquidity sweep, or rejection inside the HTF zone before committing.",
+      },
+    ],
+    examples: [
+      {
+        title: "A full read",
+        scenario: "D1 bias bullish → mark the fresh H4 demand zone → price taps it → M15 sweeps a low and breaks structure up → enter the refined demand behind the shift.",
+      },
+      {
+        title: "Respecting bias",
+        scenario: "If D1 is bearish, you ignore M15 long setups. The higher timeframe sets direction; the lower timeframe only times the entry.",
+      },
+    ],
+    xp: 30,
+    status: "locked",
+    aiMentorPrompt: mentorPrompt(
+      "the top-down workflow — setting bias and marking major zones on D1/H4, then refining and confirming entries on M15 with structure shifts, sweeps, and rejections."
     ),
   },
 ];
