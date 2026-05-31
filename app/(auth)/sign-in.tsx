@@ -13,6 +13,7 @@ import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { VerificationModal } from "@/components/VerificationModal";
 import { images } from "@/constants/images";
 import { navigateAfterAuth } from "@/lib/clerk-navigate";
+import { posthog } from "@/lib/posthog";
 import { colors } from "@/theme/colors";
 
 export default function SignIn() {
@@ -27,12 +28,18 @@ export default function SignIn() {
   const submitting = fetchStatus === "fetching";
 
   const handleSignIn = useCallback(async () => {
+    posthog.capture("sign_in_submitted", { method: "email" });
     const { error } = await signIn.password({ identifier: email, password });
     if (error) {
+      posthog.capture("sign_in_error", {
+        error_type: "credentials",
+        error_message: error.message,
+      });
       return; // field/global errors are surfaced from the `errors` signal
     }
 
     if (signIn.status === "complete") {
+      posthog.capture("sign_in_completed", { method: "email" });
       await signIn.finalize({ navigate: navigateAfterAuth(appRouter) });
     } else if (signIn.status === "needs_second_factor") {
       // 2FA is enabled — email a code and collect it in the modal.
@@ -48,17 +55,26 @@ export default function SignIn() {
     async (code: string): Promise<string | null> => {
       const { error } = await signIn.mfa.verifyEmailCode({ code });
       if (error) {
+        posthog.capture("sign_in_error", {
+          error_type: "mfa_code",
+          error_message: error.message,
+        });
         return error.message ?? "That code didn't work. Try again.";
       }
       const { error: finalizeError } = await signIn.finalize({
         navigate: navigateAfterAuth(appRouter),
       });
       if (finalizeError) {
+        posthog.capture("sign_in_error", {
+          error_type: "finalize",
+          error_message: finalizeError.message,
+        });
         return finalizeError.message ?? "We couldn't complete your sign in.";
       }
+      posthog.capture("sign_in_completed", { method: "email_mfa" });
       return null;
     },
-    [signIn, appRouter],
+    [signIn, appRouter, email],
   );
 
   const handleResend = useCallback(async (): Promise<string | null> => {

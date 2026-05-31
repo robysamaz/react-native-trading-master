@@ -13,6 +13,7 @@ import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { VerificationModal } from "@/components/VerificationModal";
 import { images } from "@/constants/images";
 import { navigateAfterAuth } from "@/lib/clerk-navigate";
+import { posthog } from "@/lib/posthog";
 import { colors } from "@/theme/colors";
 
 export default function SignUp() {
@@ -27,12 +28,21 @@ export default function SignUp() {
 
   // Step 1: create the sign-up with email + password, then email a code.
   const handleSignUp = useCallback(async () => {
+    posthog.capture("sign_up_submitted", { method: "email" });
     const { error } = await signUp.password({ emailAddress: email, password });
     if (error) {
+      posthog.capture("sign_up_error", {
+        error_type: "field",
+        error_message: error.message,
+      });
       return; // field/global errors are surfaced from the `errors` signal
     }
     const { error: sendError } = await signUp.verifications.sendEmailCode();
     if (sendError) {
+      posthog.capture("sign_up_error", {
+        error_type: "verification_send",
+        error_message: sendError.message,
+      });
       return;
     }
     setVerifying(true);
@@ -43,17 +53,30 @@ export default function SignUp() {
     async (code: string): Promise<string | null> => {
       const { error } = await signUp.verifications.verifyEmailCode({ code });
       if (error) {
+        posthog.capture("sign_up_error", {
+          error_type: "verification_code",
+          error_message: error.message,
+        });
         return error.message ?? "That code didn't work. Try again.";
       }
       const { error: finalizeError } = await signUp.finalize({
         navigate: navigateAfterAuth(appRouter),
       });
       if (finalizeError) {
+        posthog.capture("sign_up_error", {
+          error_type: "finalize",
+          error_message: finalizeError.message,
+        });
         return finalizeError.message ?? "We couldn't complete your sign up.";
       }
+      posthog.identify(email, {
+        $set: { email },
+        $set_once: { signup_date: new Date().toISOString(), signup_method: "email" },
+      });
+      posthog.capture("sign_up_completed", { method: "email" });
       return null;
     },
-    [signUp, appRouter],
+    [signUp, appRouter, email],
   );
 
   const handleResend = useCallback(async (): Promise<string | null> => {

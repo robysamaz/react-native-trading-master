@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
 
+import { posthog } from "@/lib/posthog";
 import { colors } from "@/theme/colors";
 
 // Social SSO relies on Clerk's native module, which isn't bundled in Expo Go.
@@ -63,14 +64,20 @@ export function SocialAuthButtons() {
       return;
     }
 
+    posthog.capture("social_auth_started", { provider: strategy });
     try {
       setBusy(strategy);
       const { createdSessionId, setActive } = await startSSOFlow({ strategy });
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        posthog.capture("social_auth_completed", { provider: strategy });
         router.replace("/");
       }
     } catch (err) {
+      posthog.capture("social_auth_error", {
+        provider: strategy,
+        error_message: err instanceof Error ? err.message : "unknown",
+      });
       Alert.alert(
         "Sign-in failed",
         err instanceof Error ? err.message : "Could not complete social sign-in. Please try again.",

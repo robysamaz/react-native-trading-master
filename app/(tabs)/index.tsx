@@ -11,6 +11,7 @@ import { images } from "@/constants/images";
 import { getLessonsForUnit } from "@/data/lessons";
 import { getUnitById, getUnitsForTrack } from "@/data/units";
 import { withAlpha } from "@/lib/color";
+import { posthog } from "@/lib/posthog";
 import { useSelectedTrack, useTrackStore } from "@/store/track-store";
 import { colors } from "@/theme/colors";
 import type { Lesson, Track, Unit } from "@/types/learning";
@@ -53,7 +54,15 @@ export default function HomeTab() {
 function HomeScreen({ track }: { track: Track }) {
   const router = useRouter();
   const { user } = useUser();
+  const { signOut } = useAuth();
   const clearTrack = useTrackStore((state) => state.clearTrack);
+
+  const handleSignOut = async () => {
+    posthog.capture("sign_out", { method: "manual" });
+    await signOut();
+    // posthog.reset() fires automatically via IdentitySync on the signed-out transition.
+    router.replace("/onboarding");
+  };
 
   // Greeting: first name → email local part → "Trader".
   const greetingName =
@@ -126,9 +135,14 @@ function HomeScreen({ track }: { track: Track }) {
               lesson={currentLesson}
               unit={currentUnit}
               accent={track.accent}
-              onPress={() =>
-                router.push({ pathname: "/lesson/[id]", params: { id: currentLesson.id } })
-              }
+              onPress={() => {
+                posthog.capture("lesson_opened", {
+                  lesson_id: currentLesson.id,
+                  lesson_title: currentLesson.title,
+                  track_id: track.id,
+                });
+                router.push({ pathname: "/lesson/[id]", params: { id: currentLesson.id } });
+              }}
             />
           ) : null}
 
@@ -166,6 +180,17 @@ function HomeScreen({ track }: { track: Track }) {
             <Text className="text-caption ml-1.5 text-text-secondary">
               Clear track (dev)
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleSignOut}
+            testID="sign-out-button"
+            className="mt-3 flex-row items-center justify-center"
+            hitSlop={8}
+          >
+            <Ionicons name="log-out-outline" size={16} color={colors.textSecondary} />
+            <Text className="text-caption ml-1.5 text-text-secondary">Sign out</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>

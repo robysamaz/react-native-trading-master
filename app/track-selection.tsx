@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "@/constants/images";
 import { tracks } from "@/data/tracks";
 import { withAlpha } from "@/lib/color";
+import { posthog } from "@/lib/posthog";
 import { useTrackStore } from "@/store/track-store";
 import { colors } from "@/theme/colors";
 import type { Track } from "@/types/learning";
@@ -16,8 +17,18 @@ export default function TrackSelection() {
   const selectedTrackId = useTrackStore((state) => state.selectedTrackId);
   const selectTrack = useTrackStore((state) => state.selectTrack);
 
+  const handleSelectTrack = (trackId: string, trackTitle: string) => {
+    selectTrack(trackId);
+    posthog.capture("track_selected", { track_id: trackId, track_title: trackTitle });
+  };
+
   const handleStart = () => {
     if (!selectedTrackId) return;
+    const track = tracks.find((t) => t.id === selectedTrackId);
+    posthog.capture("track_learning_started", {
+      track_id: selectedTrackId,
+      track_title: track?.title ?? null,
+    });
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -57,7 +68,7 @@ export default function TrackSelection() {
             key={track.id}
             track={track}
             selected={track.id === selectedTrackId}
-            onPress={() => selectTrack(track.id)}
+            onPress={() => handleSelectTrack(track.id, track.title)}
           />
         ))}
       </ScrollView>
