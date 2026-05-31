@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 
+import { useSignIn } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { Link, router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,16 +12,59 @@ import { AuthField } from "@/components/AuthField";
 import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { VerificationModal } from "@/components/VerificationModal";
 import { images } from "@/constants/images";
+import { navigateAfterAuth } from "@/lib/clerk-navigate";
 import { colors } from "@/theme/colors";
 
 export default function SignIn() {
+  const { signIn, errors, fetchStatus } = useSignIn();
+  const appRouter = useRouter();
+
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  // Shown only when the account requires a second factor (email code).
   const [verifying, setVerifying] = useState(false);
 
-  const handleVerified = useCallback(() => {
-    setVerifying(false);
-    router.replace("/");
-  }, []);
+  const submitting = fetchStatus === "fetching";
+
+  const handleSignIn = useCallback(async () => {
+    const { error } = await signIn.password({ identifier: email, password });
+    if (error) {
+      return; // field/global errors are surfaced from the `errors` signal
+    }
+
+    if (signIn.status === "complete") {
+      await signIn.finalize({ navigate: navigateAfterAuth(appRouter) });
+    } else if (signIn.status === "needs_second_factor") {
+      // 2FA is enabled — email a code and collect it in the modal.
+      await signIn.mfa.sendEmailCode();
+      setVerifying(true);
+    }
+  }, [signIn, email, password, appRouter]);
+
+  const handleVerifyCode = useCallback(
+    async (code: string): Promise<string | null> => {
+      const { error } = await signIn.mfa.verifyEmailCode({ code });
+      if (error) {
+        return error.message ?? "That code didn't work. Try again.";
+      }
+      const { error: finalizeError } = await signIn.finalize({
+        navigate: navigateAfterAuth(appRouter),
+      });
+      if (finalizeError) {
+        return finalizeError.message ?? "We couldn't complete your sign in.";
+      }
+      return null;
+    },
+    [signIn, appRouter],
+  );
+
+  const handleResend = useCallback(async () => {
+    await signIn.mfa.sendEmailCode();
+  }, [signIn]);
+
+  const identifierError = errors.fields.identifier?.message;
+  const passwordError = errors.fields.password?.message;
+  const globalError = errors.global?.[0]?.message;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -53,7 +97,7 @@ export default function SignIn() {
           <Image source={images.mascotAuth} contentFit="contain" style={styles.mascot} />
         </View>
 
-        {/* Field (email only — no password on sign-in) */}
+        {/* Fields */}
         <AuthField
           label="Email"
           value={email}
@@ -61,15 +105,32 @@ export default function SignIn() {
           placeholder="you@example.com"
           keyboardType="email-address"
         />
+        {identifierError ? (
+          <Text className="-mt-2 mb-1 font-poppins text-[12px] text-error">{identifierError}</Text>
+        ) : null}
+        <AuthField
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Enter your password"
+          secure
+        />
+        {passwordError ? (
+          <Text className="-mt-2 mb-1 font-poppins text-[12px] text-error">{passwordError}</Text>
+        ) : null}
+        {globalError ? (
+          <Text className="mb-1 font-poppins text-[12px] text-error">{globalError}</Text>
+        ) : null}
 
         {/* Primary CTA */}
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => setVerifying(true)}
+          onPress={handleSignIn}
+          disabled={submitting || !email || !password}
+          style={[styles.cta, (submitting || !email || !password) && styles.ctaDisabled]}
           className="mt-2 items-center justify-center rounded-2xl bg-lingua-purple py-5"
-          style={styles.cta}
         >
-          <Text className="text-h4 text-white">Sign In</Text>
+          <Text className="text-h4 text-white">{submitting ? "Please wait…" : "Sign In"}</Text>
         </TouchableOpacity>
 
         {/* Social */}
@@ -90,7 +151,8 @@ export default function SignIn() {
         visible={verifying}
         email={email}
         onClose={() => setVerifying(false)}
-        onComplete={handleVerified}
+        onSubmit={handleVerifyCode}
+        onResend={handleResend}
       />
     </SafeAreaView>
   );
@@ -106,5 +168,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 8,
+  },
+  ctaDisabled: {
+    opacity: 0.6,
   },
 });

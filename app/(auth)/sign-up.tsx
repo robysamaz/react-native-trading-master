@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 
+import { useSignUp } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { Link, router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,17 +12,57 @@ import { AuthField } from "@/components/AuthField";
 import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { VerificationModal } from "@/components/VerificationModal";
 import { images } from "@/constants/images";
+import { navigateAfterAuth } from "@/lib/clerk-navigate";
 import { colors } from "@/theme/colors";
 
 export default function SignUp() {
+  const { signUp, errors, fetchStatus } = useSignUp();
+  const appRouter = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verifying, setVerifying] = useState(false);
 
-  const handleVerified = useCallback(() => {
-    setVerifying(false);
-    router.replace("/");
-  }, []);
+  const submitting = fetchStatus === "fetching";
+
+  // Step 1: create the sign-up with email + password, then email a code.
+  const handleSignUp = useCallback(async () => {
+    const { error } = await signUp.password({ emailAddress: email, password });
+    if (error) {
+      return; // field/global errors are surfaced from the `errors` signal
+    }
+    const { error: sendError } = await signUp.verifications.sendEmailCode();
+    if (sendError) {
+      return;
+    }
+    setVerifying(true);
+  }, [signUp, email, password]);
+
+  // Step 2: verify the emailed code, then finalize the session and go home.
+  const handleVerifyCode = useCallback(
+    async (code: string): Promise<string | null> => {
+      const { error } = await signUp.verifications.verifyEmailCode({ code });
+      if (error) {
+        return error.message ?? "That code didn't work. Try again.";
+      }
+      const { error: finalizeError } = await signUp.finalize({
+        navigate: navigateAfterAuth(appRouter),
+      });
+      if (finalizeError) {
+        return finalizeError.message ?? "We couldn't complete your sign up.";
+      }
+      return null;
+    },
+    [signUp, appRouter],
+  );
+
+  const handleResend = useCallback(async () => {
+    await signUp.verifications.sendEmailCode();
+  }, [signUp]);
+
+  const emailError = errors.fields.emailAddress?.message;
+  const passwordError = errors.fields.password?.message;
+  const globalError = errors.global?.[0]?.message;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -62,6 +103,9 @@ export default function SignUp() {
           placeholder="you@example.com"
           keyboardType="email-address"
         />
+        {emailError ? (
+          <Text className="-mt-2 mb-1 font-poppins text-[12px] text-error">{emailError}</Text>
+        ) : null}
         <AuthField
           label="Password"
           value={password}
@@ -69,15 +113,22 @@ export default function SignUp() {
           placeholder="Create a password"
           secure
         />
+        {passwordError ? (
+          <Text className="-mt-2 mb-1 font-poppins text-[12px] text-error">{passwordError}</Text>
+        ) : null}
+        {globalError ? (
+          <Text className="mb-1 font-poppins text-[12px] text-error">{globalError}</Text>
+        ) : null}
 
         {/* Primary CTA */}
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => setVerifying(true)}
+          onPress={handleSignUp}
+          disabled={submitting || !email || !password}
+          style={[styles.cta, (submitting || !email || !password) && styles.ctaDisabled]}
           className="mt-2 items-center justify-center rounded-2xl bg-lingua-purple py-5"
-          style={styles.cta}
         >
-          <Text className="text-h4 text-white">Sign Up</Text>
+          <Text className="text-h4 text-white">{submitting ? "Please wait…" : "Sign Up"}</Text>
         </TouchableOpacity>
 
         {/* Social */}
@@ -92,13 +143,17 @@ export default function SignUp() {
             <Text className="font-poppins-semibold text-[14px] text-lingua-purple">Log in</Text>
           </Link>
         </View>
+
+        {/* Clerk bot-protection mount point (invisible). */}
+        <View nativeID="clerk-captcha" />
       </ScrollView>
 
       <VerificationModal
         visible={verifying}
         email={email}
         onClose={() => setVerifying(false)}
-        onComplete={handleVerified}
+        onSubmit={handleVerifyCode}
+        onResend={handleResend}
       />
     </SafeAreaView>
   );
@@ -114,5 +169,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 8,
+  },
+  ctaDisabled: {
+    opacity: 0.6,
   },
 });

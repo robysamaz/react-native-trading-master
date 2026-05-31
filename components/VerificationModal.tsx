@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Ionicons } from "@expo/vector-icons";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -21,45 +22,89 @@ type VerificationModalProps = {
   visible: boolean;
   email: string;
   onClose: () => void;
-  /** Fired automatically once all 6 digits are entered. */
-  onComplete: () => void;
+  /**
+   * Verifies the entered code with Clerk. Resolve with `null` on success
+   * (the caller navigates), or an error message string to show inline.
+   * Fired automatically once all 6 digits are entered.
+   */
+  onSubmit: (code: string) => Promise<string | null>;
+  /** Requests a fresh code from Clerk. */
+  onResend: () => Promise<void> | void;
 };
 
 /**
- * Bottom-sheet modal that asks the user to enter the 6-digit code we
- * "emailed" them. A single hidden number-pad input drives six visible
- * boxes; the sheet rides above the keyboard and auto-submits on the
- * final digit. Mocked flow — any 6 digits are accepted for now.
+ * Bottom-sheet modal that asks the user to enter the 6-digit code Clerk
+ * emailed them. A single hidden number-pad input drives six visible boxes;
+ * the sheet rides above the keyboard and auto-submits on the final digit.
  */
 export function VerificationModal({
   visible,
   email,
   onClose,
-  onComplete,
+  onSubmit,
+  onResend,
 }: VerificationModalProps) {
   const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   // Reset + focus whenever the sheet opens.
   useEffect(() => {
     if (visible) {
       setCode("");
+      setError(null);
+      setSubmitting(false);
       const timer = setTimeout(() => inputRef.current?.focus(), 250);
       return () => clearTimeout(timer);
     }
   }, [visible]);
 
-  // Auto-navigate once the last digit lands.
+  // Verify with Clerk once the last digit lands.
   useEffect(() => {
-    if (code.length === CODE_LENGTH) {
-      inputRef.current?.blur();
-      onComplete();
+    if (code.length !== CODE_LENGTH || submitting) {
+      return;
     }
-  }, [code, onComplete]);
+    let cancelled = false;
+    setSubmitting(true);
+    inputRef.current?.blur();
+    onSubmit(code)
+      .then((message) => {
+        if (cancelled) return;
+        if (message) {
+          // Verification failed — surface the error and let them retry.
+          setError(message);
+          setCode("");
+          setSubmitting(false);
+          inputRef.current?.focus();
+        }
+        // On success the caller navigates away; leave the sheet as-is.
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Verification failed. Try again.");
+        setCode("");
+        setSubmitting(false);
+        inputRef.current?.focus();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [code, submitting, onSubmit]);
 
   const handleChange = (text: string) => {
+    if (submitting) return;
     const digits = text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH);
+    setError(null);
     setCode(digits);
+  };
+
+  const handleResend = async () => {
+    if (submitting) return;
+    setError(null);
+    setCode("");
+    await onResend();
+    inputRef.current?.focus();
   };
 
   return (
@@ -138,19 +183,26 @@ export function VerificationModal({
             keyboardType="number-pad"
             textContentType="oneTimeCode"
             autoComplete="one-time-code"
+            editable={!submitting}
             maxLength={CODE_LENGTH}
             style={{ position: "absolute", opacity: 0, height: 1, width: 1 }}
           />
 
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => inputRef.current?.focus()}
-            className="mt-6"
-          >
-            <Text className="font-poppins-medium text-center text-[14px] text-text-secondary">
-              Didn&apos;t get a code? <Text className="text-lingua-purple">Resend</Text>
-            </Text>
-          </TouchableOpacity>
+          {error ? (
+            <Text className="mt-3 text-center font-poppins text-[13px] text-error">{error}</Text>
+          ) : null}
+
+          {submitting ? (
+            <View className="mt-6">
+              <ActivityIndicator color={colors.linguaPurple} />
+            </View>
+          ) : (
+            <TouchableOpacity activeOpacity={0.7} onPress={handleResend} className="mt-6">
+              <Text className="font-poppins-medium text-center text-[14px] text-text-secondary">
+                Didn&apos;t get a code? <Text className="text-lingua-purple">Resend</Text>
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </KeyboardAvoidingView>
     </Modal>
