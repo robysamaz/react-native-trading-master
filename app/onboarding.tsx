@@ -69,7 +69,7 @@ export default function Onboarding() {
         </View>
 
         {/* CTA */}
-        <Link href="/" asChild>
+        <Link href="/sign-up" asChild>
           <TouchableOpacity
             activeOpacity={0.9}
             className="mb-4 flex-row items-center justify-center rounded-[18px] bg-lingua-purple py-5"
