@@ -28,8 +28,11 @@ type VerificationModalProps = {
    * Fired automatically once all 6 digits are entered.
    */
   onSubmit: (code: string) => Promise<string | null>;
-  /** Requests a fresh code from Clerk. */
-  onResend: () => Promise<void> | void;
+  /**
+   * Requests a fresh code from Clerk. Resolve with `null` on success, or an
+   * error message string to show inline.
+   */
+  onResend: () => Promise<string | null>;
 };
 
 /**
@@ -103,7 +106,14 @@ export function VerificationModal({
     if (submitting) return;
     setError(null);
     setCode("");
-    await onResend();
+    try {
+      const message = await onResend();
+      if (message) {
+        setError(message);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't resend the code. Try again.");
+    }
     inputRef.current?.focus();
   };
 

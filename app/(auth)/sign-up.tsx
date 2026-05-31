@@ -56,8 +56,12 @@ export default function SignUp() {
     [signUp, appRouter],
   );
 
-  const handleResend = useCallback(async () => {
-    await signUp.verifications.sendEmailCode();
+  const handleResend = useCallback(async (): Promise<string | null> => {
+    const { error } = await signUp.verifications.sendEmailCode();
+    if (error) {
+      return error.message ?? "We couldn't resend the code. Try again.";
+    }
+    return null;
   }, [signUp]);
 
   const emailError = errors.fields.emailAddress?.message;

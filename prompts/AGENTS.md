@@ -8,17 +8,19 @@ You should think like a senior mobile developer, but explain and implement like 
 
 ## Project Overview
 
-We are building a Duolingo-inspired AI language learning mobile app using Expo.
+We are building **Trading Master**, a Duolingo-inspired AI futures-trading education mobile app using Expo.
 
-The app teaches users languages through interactive lessons that may include:
+The app teaches users to trade through interactive lessons that may include:
 
-- video-based AI teacher lessons
+- video-based AI mentor lessons
 - audio lessons
-- chat-based AI tutor lessons
-- vocabulary review
+- chat-based AI mentor lessons
+- key-term and setup review
 - local XP and lesson completion
-- language selection
+- track selection (learning paths)
 - beautiful mobile-first UI inspired by playful learning apps
+
+It teaches a supply & demand zone methodology (RBR/DBR/DBD/RBD zones, A+/B/C grading, multi-timeframe bias, strict risk management) on instruments like MES, MNQ, MYM, MCL, MGC (Micro Gold), and M6E (Micro EUR/USD). The AI mentor teaches concepts only — it never gives live trade signals or financial advice.
 
 This is primarily a learning project. The goal is to teach developers how to build a modern AI-powered Expo app feature by feature.
 
@@ -37,7 +39,7 @@ Use the following stack:
 - AsyncStorage
 - Clerk for authentication
 - Stream / GetStream for video and real-time communication
-- Stream Vision Agents for AI video teacher capability
+- Stream Vision Agents for AI video mentor capability
 - Server-side API routes or backend functions for secrets, tokens, and AI calls
 
 Do not introduce new major libraries unless there is a strong reason.

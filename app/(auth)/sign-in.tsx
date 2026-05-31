@@ -36,7 +36,10 @@ export default function SignIn() {
       await signIn.finalize({ navigate: navigateAfterAuth(appRouter) });
     } else if (signIn.status === "needs_second_factor") {
       // 2FA is enabled — email a code and collect it in the modal.
-      await signIn.mfa.sendEmailCode();
+      const { error: sendError } = await signIn.mfa.sendEmailCode();
+      if (sendError) {
+        return; // surfaced from the `errors` signal; don't open the modal
+      }
       setVerifying(true);
     }
   }, [signIn, email, password, appRouter]);
@@ -58,8 +61,12 @@ export default function SignIn() {
     [signIn, appRouter],
   );
 
-  const handleResend = useCallback(async () => {
-    await signIn.mfa.sendEmailCode();
+  const handleResend = useCallback(async (): Promise<string | null> => {
+    const { error } = await signIn.mfa.sendEmailCode();
+    if (error) {
+      return error.message ?? "We couldn't resend the code. Try again.";
+    }
+    return null;
   }, [signIn]);
 
   const identifierError = errors.fields.identifier?.message;
