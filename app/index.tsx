@@ -2,10 +2,13 @@ import { useAuth, useClerk, useUser } from "@clerk/expo";
 import { Link, Redirect } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
+import { useSelectedTrack } from "@/store/track-store";
+
 export default function Index() {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const selectedTrack = useSelectedTrack();
 
   // Wait for Clerk to hydrate the session before deciding where to go.
   if (!isLoaded) {
@@ -27,12 +30,36 @@ export default function Index() {
         </Text>
       ) : null}
 
+      {/* Current learning path (read from the persisted track store) */}
+      <View className="mt-6 items-center">
+        {selectedTrack ? (
+          <Text className="text-body-md text-center text-text-secondary">
+            Current track: <Text className="text-text-primary">{selectedTrack.title}</Text>
+          </Text>
+        ) : (
+          <Text className="text-body-md text-center text-text-secondary">
+            No track selected yet
+          </Text>
+        )}
+      </View>
+
+      <Link href="/track-selection" asChild>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          className="mt-4 rounded-[14px] bg-lingua-purple px-8 py-3"
+        >
+          <Text className="text-h4 text-white">
+            {selectedTrack ? "Change track" : "Choose a track"}
+          </Text>
+        </TouchableOpacity>
+      </Link>
+
       <Link href="/onboarding" asChild>
         <TouchableOpacity
           activeOpacity={0.9}
-          className="mt-8 rounded-[14px] bg-lingua-purple px-8 py-3"
+          className="mt-4 rounded-[14px] border border-border px-8 py-3"
         >
-          <Text className="text-h4 text-white">View Onboarding</Text>
+          <Text className="text-h4 text-text-primary">View Onboarding</Text>
         </TouchableOpacity>
       </Link>
 
