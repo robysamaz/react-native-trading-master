@@ -7,17 +7,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 import { tracks } from "@/data/tracks";
+import { withAlpha } from "@/lib/color";
 import { useTrackStore } from "@/store/track-store";
 import { colors } from "@/theme/colors";
 import type { Track } from "@/types/learning";
-
-/** Append an alpha channel to a 6-digit hex color (e.g. "#21C16B" + 0.12). */
-function withAlpha(hex: string, alpha: number): string {
-  const a = Math.round(alpha * 255)
-    .toString(16)
-    .padStart(2, "0");
-  return `${hex}${a}`;
-}
 
 export default function TrackSelection() {
   const selectedTrackId = useTrackStore((state) => state.selectedTrackId);

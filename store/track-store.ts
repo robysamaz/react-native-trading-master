@@ -18,6 +18,8 @@ interface TrackState {
   /** True once AsyncStorage has finished rehydrating this store. */
   hasHydrated: boolean;
   selectTrack: (id: string) => void;
+  /** Reset the selection (dev helper) — clears the persisted track id. */
+  clearTrack: () => void;
   setHasHydrated: (value: boolean) => void;
 }
 
@@ -27,6 +29,7 @@ export const useTrackStore = create<TrackState>()(
       selectedTrackId: null,
       hasHydrated: false,
       selectTrack: (id) => set({ selectedTrackId: id }),
+      clearTrack: () => set({ selectedTrackId: null }),
       setHasHydrated: (value) => set({ hasHydrated: value }),
     }),
     {
