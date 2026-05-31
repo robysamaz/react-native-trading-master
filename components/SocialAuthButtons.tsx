@@ -3,11 +3,16 @@ import { useState } from "react";
 
 import { useSSO } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
 
 import { colors } from "@/theme/colors";
+
+// Social SSO relies on Clerk's native module, which isn't bundled in Expo Go.
+// In Expo Go we surface a friendly message instead of crashing the runtime.
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 type OAuthStrategy = "oauth_google" | "oauth_facebook" | "oauth_apple";
@@ -49,6 +54,15 @@ export function SocialAuthButtons() {
 
   const handlePress = async (strategy: OAuthStrategy) => {
     if (busy) return;
+
+    if (isExpoGo) {
+      Alert.alert(
+        "Development build required",
+        "Social sign-in (Google, Facebook, Apple) uses native modules that aren't available in Expo Go. Email sign-up and sign-in work here — for social login, run a development build.",
+      );
+      return;
+    }
+
     try {
       setBusy(strategy);
       const { createdSessionId, setActive } = await startSSOFlow({ strategy });
@@ -57,6 +71,10 @@ export function SocialAuthButtons() {
         router.replace("/");
       }
     } catch (err) {
+      Alert.alert(
+        "Sign-in failed",
+        err instanceof Error ? err.message : "Could not complete social sign-in. Please try again.",
+      );
       console.error("SSO error:", JSON.stringify(err, null, 2));
     } finally {
       setBusy(null);
