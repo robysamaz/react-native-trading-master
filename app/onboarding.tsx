@@ -8,6 +8,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
+import { posthog } from "@/lib/posthog";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -69,9 +70,10 @@ export default function Onboarding() {
         </View>
 
         {/* CTA */}
-        <Link href="/" asChild>
+        <Link href="/sign-up" asChild>
           <TouchableOpacity
             activeOpacity={0.9}
+            onPress={() => posthog.capture("onboarding_get_started")}
             className="mb-4 flex-row items-center justify-center rounded-[18px] bg-lingua-purple py-5"
             style={styles.cta}
           >
